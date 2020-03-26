@@ -32,6 +32,7 @@ local.properties
 # node.js
 #
 node_modules/
+ios/
 npm-debug.log
 yarn-error.log
 
@@ -56,4 +57,4 @@ buck-out/
 *.jsbundle
 
 # CocoaPods
-/ios/Pods/
+
