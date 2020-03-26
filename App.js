@@ -1,5 +1,14 @@
 import React from 'react';
-import {Alert, Button, SafeAreaView, StatusBar, StyleSheet, Switch, Text, View} from 'react-native';
+import {
+  Alert,
+  Button,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import Geolocation from '@react-native-community/geolocation';
@@ -7,8 +16,6 @@ import Geolocation from '@react-native-community/geolocation';
 import Sound from 'react-native-sound';
 
 class App extends React.Component {
-  watchID: ?number = null;
-
   constructor() {
     super();
     Sound.setCategory('Playback', true); // true = mixWithOthers
@@ -21,7 +28,6 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-
     Geolocation.getCurrentPosition(
       position => {
         const initialPosition = JSON.stringify(position);
@@ -41,7 +47,6 @@ class App extends React.Component {
       }
     });
 
-
     this.setState({
       sound,
     });
@@ -60,7 +65,7 @@ class App extends React.Component {
     this.state.sound.stop();
   };
 
-  _toggleLoop = (value) => {
+  _toggleLoop = value => {
     console.warn(value);
     if (value) {
       this.state.sound.setNumberOfLoops(-1); // loop infinite
@@ -80,9 +85,11 @@ class App extends React.Component {
   render() {
     return (
       <>
-        <StatusBar barStyle="dark-content"/>
+        <StatusBar barStyle="dark-content" />
         <SafeAreaView>
-          <Text style={styles.sectionTitle}>TILN PROJECT - READING ASSISTANT</Text>
+          <Text style={styles.sectionTitle}>
+            TILN PROJECT - READING ASSISTANT
+          </Text>
           <View>
             <Text>
               <Text style={styles.title}>Initial position: </Text>
@@ -93,14 +100,17 @@ class App extends React.Component {
               {this.state.lastPosition}
             </Text>
           </View>
-
         </SafeAreaView>
-        <SafeAreaView style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-          <Button title={'Play'} onPress={this._play}/>
-          <Button title={'Pause'} onPress={this._pause}/>
-          <Button title={'Stop'} onPress={this._stop}/>
-          <Text style={styles.highlight}>Repeat?</Text><Switch onValueChange={(value) => this._toggleLoop(value)}
-                                                               value={this.state.isLoop}/>
+        <SafeAreaView
+          style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+          <Button title={'Play'} onPress={this._play} />
+          <Button title={'Pause'} onPress={this._pause} />
+          <Button title={'Stop'} onPress={this._stop} />
+          <Text style={styles.highlight}>Repeat?</Text>
+          <Switch
+            onValueChange={value => this._toggleLoop(value)}
+            value={this.state.isLoop}
+          />
         </SafeAreaView>
       </>
     );
