@@ -1,6 +1,10 @@
 import xml.etree.ElementTree as ET
 import geograpy3
 
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
+
+
 myTree = ET.parse('MappingBooks_standoff.xml')
 myRoot = myTree.getroot()
 
@@ -31,10 +35,26 @@ for key in sorted(finalText, key=lambda j: int(j.split('p.')[1])):
     places_from_text.append(more_places.cities)
     places_from_text.append(more_places.regions)
     places_from_text.append(more_places.places)
+    print(more_places.cities)
+    print(more_places.regions)
+    print(more_places.places)
 
-print(places_from_text)
+# print(places_from_text)
 
-######
 
-earthRadius = 6372.8
+# aici calculez lat si lon pentru fiecare place din places_from_text
+geolocator = Nominatim()
+lat_lon = []
+for place in places_from_text:
+    try:
+        location = geolocator.geocode(place)
+        if location:
+            print(location.latitude, location.longitude)
+            lat_lon.append(location)
+    except GeocoderTimedOut as e:
+        print("Error: geocode failed on input %s with message %s", (place, e))
+
+print(lat_lon)
+
+# earthRadius = 6372.8
 
