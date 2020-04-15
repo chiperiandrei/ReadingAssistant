@@ -1,11 +1,14 @@
 from flask import Flask
+import json
+from region import getNearByLocations
 
 app = Flask(__name__)
 
 
-@app.route('/', methods=['POST', 'GET'])
+@app.route('/getLocations', methods=['GET'])
 def index():
-    return 'hello world'
+    data = getNearByLocations()
+    return json.dumps({'data': data})
 
 
 if __name__ == "__main__":
