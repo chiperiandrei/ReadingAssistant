@@ -65,9 +65,9 @@ def haversine(coord1, coord2):
 
 
 # calculez locatiile din apropiere
-def getNearByLocations():
+def getNearByLocations(lat, long):
     nearby_places = []
-    my_actual_location = 45.6420204, 25.6157735
+    my_actual_location = lat, long
     my_radius = 20000
 
     places = startParsing()
