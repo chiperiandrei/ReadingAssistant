@@ -15,7 +15,7 @@ def index():
     return json.dumps({'data': data})
 
 
-# http://127.0.0.1:5000/getLocations?lat=45.6420204&long=25.6157735
+# http://68999727.ngrok.io/getLocations?lat=47.157466&long=27.578429
 
 if __name__ == "__main__":
     app.run()
