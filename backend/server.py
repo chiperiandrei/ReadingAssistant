@@ -1,6 +1,6 @@
 from flask import Flask, request
 import json
-from region import getNearByLocations
+from region import getNearByLocation
 from flask_ngrok import run_with_ngrok
 
 app = Flask(__name__)
@@ -11,7 +11,7 @@ run_with_ngrok(app)  # Start ngrok when app is run
 def index():
     lat = request.args.get('lat')
     long = request.args.get('long')
-    data = getNearByLocations(float(lat), float(long))
+    data = getNearByLocation(float(lat), float(long))
     return json.dumps({'data': data})
 
 
