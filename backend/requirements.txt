@@ -11,7 +11,7 @@ Flask==1.1.2
 flask-ngrok==0.0.25
 future==0.18.2
 geographiclib==1.50
-geograpy3==1.0.0
+geograpy3==0.1.2
 geopy==1.21.0
 geotext==0.4.0
 idna==2.9
