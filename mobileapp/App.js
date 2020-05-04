@@ -1,214 +1,350 @@
-import React, { useState, useEffect } from 'react';
+/* eslint-disable prettier/prettier */
+import React, { Component } from 'react';
 import {
-  Alert,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-  ImageBackground,
+    PermissionsAndroid,
+    Platform,
+    StyleSheet,
+    Text,
+    ToastAndroid,
+    View,
+    Alert,
 } from 'react-native';
 import { Header, Button, Avatar } from 'react-native-elements';
+import Spinner from 'react-native-loading-spinner-overlay';
+import Geolocation from 'react-native-geolocation-service';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
-import Geolocation from '@react-native-community/geolocation';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Sound from 'react-native-sound';
-// import Tts from 'react-native-tts';
-import Spinner from 'react-native-loading-spinner-overlay';
-import Axios from "axios";
+import RNFS from 'react-native-fs';
+import { RETEROM_KEY } from 'react-native-dotenv';
 
-const soundStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-};
-const App = props => {
-  const [lastPosition, setLastPosition] = useState(null);
-  const [initialPosition, setInitialPosition] = useState(null);
-  const [sound, setSound] = useState({});
-  const [isLoop, setIsLoop] = useState(false);
-  const [spinner, setSpinner] = useState(true);
-  const [dataExists,setDataExists]=useState(false);
+export default class App extends Component<{}> {
+    watchId = null;
 
-  const play = () => {
-    sound.play(() => {
-      sound.release();
-    });
-  };
-  const pause = () => {
-    sound.pause();
-  };
-  const stop = () => {
-    sound.stop();
-  };
+    state = {
+        loading: false,
+        updatesEnabled: false,
+        location: {},
+        sound: null,
+        playable: false,
+        textApi: null,
+    };
+    play = () => {
+        this.state.sound.play(() => {
+            this.state.sound.release();
+        });
+    };
+    pause = () => {
+        this.state.sound.pause();
+    };
+    stop = () => {
+        this.state.sound.stop();
+    };
 
-  // const _playTTS = () => {
-  //   Tts.setDefaultLanguage('ro-RO');
-  //   Tts.speak(
-  //     'Vasile Alecsandri (n. 21 iulie S.N. 2 august 1821, undeva în ținutul Bacăului, Moldova — d. 22 august S.N. 3 septembrie 1890, Mircești, județul Roman, România) a fost un poet, dramaturg, folclorist, om politic, ministru, diplomat, membru fondator al Academiei Române, creator al teatrului românesc și al literaturii dramatice în România, personalitate marcantă a Moldovei și apoi a României de-a lungul întregului secol al XIX-lea.',
-  //   );
-  // };
-  // const _stopTTS = () => {
-  //   Tts.stop();
-  // };
+    hasLocationPermission = async () => {
+        if (
+            Platform.OS === 'ios' ||
+            (Platform.OS === 'android' && Platform.Version < 23)
+        ) {
+            return true;
+        }
 
-  const _toggleLoop = value => {
-    if (value) {
-      sound.setNumberOfLoops(-1); // loop infinite
-    } else {
-      sound.setNumberOfLoops(0); // no loop
+        const hasPermission = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+
+        if (hasPermission) { return true; }
+
+        const status = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+
+        if (status === PermissionsAndroid.RESULTS.GRANTED) { return true; }
+
+        if (status === PermissionsAndroid.RESULTS.DENIED) {
+            ToastAndroid.show(
+                'Location permission denied by user.',
+                ToastAndroid.LONG,
+            );
+        } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+            ToastAndroid.show(
+                'Location permission revoked by user.',
+                ToastAndroid.LONG,
+            );
+        }
+
+        return false;
+    };
+
+    getLocation = async () => {
+        const hasLocationPermission = await this.hasLocationPermission();
+
+        if (!hasLocationPermission) { return; }
+
+        this.setState({ loading: true }, () => {
+            Geolocation.getCurrentPosition(
+                position => {
+                    this.setState({ location: position, loading: false });
+                    console.log(position);
+                },
+                error => {
+                    this.setState({ location: error, loading: false });
+                    console.log(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 10000,
+                    distanceFilter: 50,
+                    forceRequestLocation: true,
+                },
+            );
+        });
+    };
+    // componentDidMount() {
+    //     // const intro = 'Aceasta este o aplicație făcută pentru proiectul Riding Asistănt din cadrul cursului de Tehnici de prelucrare a limbajului natural! Haide să explorăm lumea!';
+    //     // fetch('http://romaniantts.com/scripts/api-rotts16.php', {
+    //     //     body: `voice=sam16&inputText=${encodeURI(intro)}&vocoder=world&key=${RETEROM_KEY}`,
+    //     //     method: 'POST',
+    //     //     headers: {
+    //     //         'Content-type': 'application/x-www-form-urlencoded',
+    //     //     },
+    //     // })
+    //     //     .then(res => res.text())
+    //     //     .then(tts => {
+
+    //     //     })
+    //     //     .catch(err => console.log(err));
+    //     RNFS.downloadFile({
+    //         fromUrl: 'http://romaniantts.com/scripts/mp3/812a27a3_1383_1588601825.mp3',
+    //         toFile: `${RNFS.DocumentDirectoryPath}/intro.mp3`,
+    //     }).promise.then((response) => {
+    //         console.log(response);
+    //     });
+    //     const introsound = new Sound(`${RNFS.DocumentDirectoryPath}/intro.mp3`, Sound.MAIN_BUNDLE, (error) => {
+    //         if (error) {
+    //             console.log('failed to load the sound', error);
+    //         } else {
+    //             introsound.play();
+    //         }
+    //     });
+    // }
+
+
+    // function
+    encodeFormData = (data) => {
+        return Object.keys(data)
+            .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
+            .join('&');
     }
-    setIsLoop(value);
-  };
+    getLocationUpdates = async () => {
+        const hasLocationPermission = await this.hasLocationPermission();
 
-  useEffect(() => {
-    const watchID = Geolocation.getCurrentPosition(
-      position => {
-        const initPosition = JSON.stringify(position);
-        setInitialPosition(initPosition);
-      },
-      error => console.log(error),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000  },
-    );
-    Geolocation.watchPosition(position => {
-      const lastPos = JSON.stringify(position);
-      setLastPosition(lastPos);
-    });
-    const soundObj = new Sound('http://romaniantts.com/scripts/mp3/812a27a3_7535_1588516626.mp3', '', error => {
-      if (error) {
-        Alert.alert('error', error.message);
-      }
-    });
-    setSound(soundObj);
-    if (initialPosition!==null) {
-      Axios.get('')
+        if (!hasLocationPermission) { return; }
+
+        this.setState({ updatesEnabled: true }, () => {
+            this.watchId = Geolocation.watchPosition(
+                position => {
+                    this.setState({ location: position });
+                    console.log(position);
+                    const textInput = 'Acesta este un test al doilea';
+
+                    fetch('https://reactnative.dev/movies.json')
+                        .then(response => response.json())
+                        .then(json => {
+                            if (json.title) {
+                                const body = {
+                                    voice: 'sam16',
+                                    inputText: 'Salutari fratilor',
+                                    vocoder: 'world',
+                                    key: RETEROM_KEY,
+                                };
+                                const request = this.encodeFormData(body);
+                                console.log(request);
+                                console.log(body);
+                                fetch('http://romaniantts.com/scripts/api-rotts16.php', {
+                                    body: `voice=sam16&inputText=${encodeURI(textInput)}&vocoder=world&key=${RETEROM_KEY}`,
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-type': 'application/x-www-form-urlencoded',
+                                    },
+                                })
+                                    .then(res => res.text())
+                                    .then(tts => {
+                                        console.log(tts);
+                                        this.setState({ textApi: tts });
+                                    })
+                                    .catch(err => console.log(err));
+                            }
+                        })
+                        .catch(error => console.error(error));
+                    RNFS.downloadFile({
+                        fromUrl: `${this.state.textApi}`,
+                        toFile: `${RNFS.DocumentDirectoryPath}/temp.mp3`,
+                    }).promise.then((response) => {
+                        console.log(response);
+                    });
+                    const soundObj = new Sound(
+                        `${RNFS.DocumentDirectoryPath}/temp.mp3`, '',
+                        error => {
+                            if (error) {
+                                Alert.alert('error', error.message);
+                            }
+                        },
+                    );
+                    this.setState({ sound: soundObj }, () => {
+                        this.setState({ playable: true });
+                    });
+                },
+                error => {
+                    this.setState({ location: error });
+                    console.log(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    distanceFilter: 50,
+                    interval: 5000,
+                    fastestInterval: 2000,
+                },
+            );
+        });
+    };
+
+    removeLocationUpdates = () => {
+        if (this.watchId !== null) {
+            Geolocation.clearWatch(this.watchId);
+            this.setState({ updatesEnabled: false });
+        }
+    };
+
+    render() {
+        const { loading, location, updatesEnabled } = this.state;
+        if (this.state.playable === true) {
+            this.play();
+        }
+        return (
+            <>
+                <Header
+                    leftComponent={
+                        <Avatar
+                            size="medium"
+                            rounded
+                            icon={{ name: 'directions-walk', type: 'material' }}
+                        />
+                    }
+                    centerComponent={{
+                        text: 'READING ASSISTANT',
+                        style: { color: '#fff', fontSize: 23, fontWeight: 'bold' },
+                    }}
+                    rightComponent={
+                        <Avatar
+                            size="medium"
+                            rounded
+                            icon={{ name: 'book', type: 'font-awesome' }}
+                        />
+                    }
+                />
+                <View style={styles.container}>
+                    <Spinner
+                        visible={false}
+                        textContent={'Getting your location...'}
+                        color={'cyan'}
+                        size={'large'}
+                    />
+                    <Button
+                        title="Get Location"
+                        onPress={this.getLocation}
+                        disabled={loading || updatesEnabled}
+                    />
+                    <View style={styles.buttons}>
+                        <Button
+                            title="Start walking"
+                            onPress={this.getLocationUpdates}
+                            disabled={updatesEnabled}
+                        />
+                        <Button
+                            title="Stop walking"
+                            onPress={this.removeLocationUpdates}
+                            disabled={!updatesEnabled}
+                        />
+                        <Button
+                            icon={<Icon raised name="play" type="font-awesome" />}
+                            title="Play Sound"
+                            onPress={this.play}
+                        />
+                        <Button
+                            icon={<Icon raised name="pause" type="font-awesome" />}
+                            title="Pause Sound"
+                            onPress={this.pause}
+                        />
+                        <Button
+                            icon={<Icon raised name="stop" type="font-awesome" />}
+                            title="Stop Sound"
+                            onPress={this.stop}
+                        />
+                    </View>
+
+                    <View style={styles.result}>
+                        <Text>{JSON.stringify(location, null, 4)}</Text>
+                        <Text>{this.state.textApi}</Text>
+                    </View>
+                </View>
+            </>
+        );
     }
-    
-    return function cleanup() {
-      Geolocation.clearWatch(watchID)
-    }
-    
-  }, []);
+}
 
-  if (lastPosition===null) {
-    return (
-      <>
-        <ImageBackground
-          source={require('./assets/img/background.jpg')}
-          style={styles.image}>
-          <View>
-            <Spinner
-              visible={spinner}
-              textContent={'Getting your location...'}
-              textStyle={styles.spinnerTextStyle}
-              color={'cyan'}
-              size={'large'}
-            />
-          </View>
-        </ImageBackground>
-      </>
-    );
-  } else {
-    return (
-      <>
-        <ImageBackground
-          source={require('./assets/img/background.jpg')}
-          style={styles.image}>
-          <Header
-            leftComponent={
-              <Avatar
-                size="medium"
-                rounded
-                icon={{ name: 'directions-walk', type: 'material' }}
-              />
-            }
-            centerComponent={{
-              text: 'READING ASSISTANT',
-              style: { color: '#fff', fontSize: 23, fontWeight: 'bold' },
-            }}
-            rightComponent={
-              <Avatar
-                size="medium"
-                rounded
-                icon={{ name: 'book', type: 'font-awesome' }}
-              />
-            }
-          />
-          <View>
-            <Text style={styles.textWhite}>Current position: </Text>
-            <Text style={styles.textWhite}>{initialPosition}</Text>
-            <Text style={styles.textWhite}>Initial position: </Text>
-            <Text style={styles.textWhite}>{lastPosition}</Text>
-          </View>
-          <View style={soundStyle}>
-            <Button
-              icon={<Icon raised name="play" type="font-awesome" />}
-              title="Play Sound"
-              onPress={play}
-            />
-            <Button
-              icon={<Icon raised name="pause" type="font-awesome" />}
-              title="Pause Sound"
-              onPress={pause}
-            />
-            <Button
-              icon={<Icon raised name="stop" type="font-awesome" />}
-              title="Stop Sound"
-              onPress={stop}
-            />
-
-            {/* <Button
-              icon={<Icon raised name="microphone" type="font-awesome" />}
-              title="Play TTS"
-              onPress={_playTTS}
-            />
-            <Button
-              icon={<Icon raised name="microphone-slash" type="font-awesome" />}
-              title="Stop TTS"
-              onPress={_stopTTS}
-            /> */}
-            <Text style={styles.highlight}>Repeat?</Text>
-            <Switch
-              onValueChange={value => _toggleLoop(value)}
-              value={isLoop}
-            />
-          </View>
-        </ImageBackground>
-      </>
-    );
-  }
-};
-
-export default App;
 const styles = StyleSheet.create({
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  textWhite: {
-    color: Colors.white,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
-  image: {
-    flex: 1,
-    resizeMode: 'cover',
-  },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F5FCFF',
+        paddingHorizontal: 12,
+    },
+    result: {
+        borderWidth: 1,
+        borderColor: '#666',
+        width: '100%',
+        paddingHorizontal: 16,
+    },
+    buttons: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        marginVertical: 12,
+        width: '100%',
+    },
+    engine: {
+        position: 'absolute',
+        right: 0,
+    },
+    sectionContainer: {
+        marginTop: 32,
+        paddingHorizontal: 24,
+    },
+    textWhite: {
+        color: Colors.white,
+    },
+    sectionDescription: {
+        marginTop: 8,
+        fontSize: 18,
+        fontWeight: '400',
+        color: Colors.dark,
+    },
+    highlight: {
+        fontWeight: '700',
+    },
+    footer: {
+        color: Colors.dark,
+        fontSize: 12,
+        fontWeight: '600',
+        padding: 4,
+        paddingRight: 12,
+        textAlign: 'right',
+    },
+    image: {
+        flex: 1,
+        resizeMode: 'cover',
+    },
 });
