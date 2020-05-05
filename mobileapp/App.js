@@ -13,7 +13,6 @@ import { Header, Button, Avatar } from 'react-native-elements';
 import Spinner from 'react-native-loading-spinner-overlay';
 import Geolocation from 'react-native-geolocation-service';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import Sound from 'react-native-sound';
 import RNFS from 'react-native-fs';
 import { RETEROM_KEY } from 'react-native-dotenv';
@@ -101,34 +100,29 @@ export default class App extends Component<{}> {
             );
         });
     };
-    // componentDidMount() {
-    //     // const intro = 'Aceasta este o aplicație făcută pentru proiectul Riding Asistănt din cadrul cursului de Tehnici de prelucrare a limbajului natural! Haide să explorăm lumea!';
-    //     // fetch('http://romaniantts.com/scripts/api-rotts16.php', {
-    //     //     body: `voice=sam16&inputText=${encodeURI(intro)}&vocoder=world&key=${RETEROM_KEY}`,
-    //     //     method: 'POST',
-    //     //     headers: {
-    //     //         'Content-type': 'application/x-www-form-urlencoded',
-    //     //     },
-    //     // })
-    //     //     .then(res => res.text())
-    //     //     .then(tts => {
+    componentDidMount() {
+        RNFS.exists(`${RNFS.DocumentDirectoryPath}/intro.mp3`)
+            .then((exists) => {
+                if (exists) {
+                    const introsound = new Sound(`${RNFS.DocumentDirectoryPath}/intro.mp3`, Sound.MAIN_BUNDLE, (error) => {
+                        if (error) {
+                            console.log('failed to load the sound', error);
+                        } else {
+                            introsound.play();
+                        }
+                    });
+                } else {
+                    RNFS.downloadFile({
+                        fromUrl: 'http://romaniantts.com/scripts/mp3/812a27a3_1383_1588601825.mp3',
+                        toFile: `${RNFS.DocumentDirectoryPath}/intro.mp3`,
+                    }).promise.then((response) => {
+                        console.log(response);
+                    })
+                        .catch(err => console.log(err));
 
-    //     //     })
-    //     //     .catch(err => console.log(err));
-    //     RNFS.downloadFile({
-    //         fromUrl: 'http://romaniantts.com/scripts/mp3/812a27a3_1383_1588601825.mp3',
-    //         toFile: `${RNFS.DocumentDirectoryPath}/intro.mp3`,
-    //     }).promise.then((response) => {
-    //         console.log(response);
-    //     });
-    //     const introsound = new Sound(`${RNFS.DocumentDirectoryPath}/intro.mp3`, Sound.MAIN_BUNDLE, (error) => {
-    //         if (error) {
-    //             console.log('failed to load the sound', error);
-    //         } else {
-    //             introsound.play();
-    //         }
-    //     });
-    // }
+                }
+            });
+    }
 
 
     // function
@@ -153,15 +147,6 @@ export default class App extends Component<{}> {
                         .then(response => response.json())
                         .then(json => {
                             if (json.title) {
-                                const body = {
-                                    voice: 'sam16',
-                                    inputText: 'Salutari fratilor',
-                                    vocoder: 'world',
-                                    key: RETEROM_KEY,
-                                };
-                                const request = this.encodeFormData(body);
-                                console.log(request);
-                                console.log(body);
                                 fetch('http://romaniantts.com/scripts/api-rotts16.php', {
                                     body: `voice=sam16&inputText=${encodeURI(textInput)}&vocoder=world&key=${RETEROM_KEY}`,
                                     method: 'POST',
@@ -183,7 +168,9 @@ export default class App extends Component<{}> {
                         toFile: `${RNFS.DocumentDirectoryPath}/temp.mp3`,
                     }).promise.then((response) => {
                         console.log(response);
-                    });
+                    })
+                        .catch(err => console.log(err));
+
                     const soundObj = new Sound(
                         `${RNFS.DocumentDirectoryPath}/temp.mp3`, '',
                         error => {
@@ -266,21 +253,6 @@ export default class App extends Component<{}> {
                             title="Stop walking"
                             onPress={this.removeLocationUpdates}
                             disabled={!updatesEnabled}
-                        />
-                        <Button
-                            icon={<Icon raised name="play" type="font-awesome" />}
-                            title="Play Sound"
-                            onPress={this.play}
-                        />
-                        <Button
-                            icon={<Icon raised name="pause" type="font-awesome" />}
-                            title="Pause Sound"
-                            onPress={this.pause}
-                        />
-                        <Button
-                            icon={<Icon raised name="stop" type="font-awesome" />}
-                            title="Stop Sound"
-                            onPress={this.stop}
                         />
                     </View>
 
