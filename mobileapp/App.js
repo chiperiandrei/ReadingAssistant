@@ -15,7 +15,7 @@ import Geolocation from 'react-native-geolocation-service';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Sound from 'react-native-sound';
 import RNFS from 'react-native-fs';
-import { RETEROM_KEY } from 'react-native-dotenv';
+import { RETEROM_KEY, RETEROM_API_URL, GET_LOCATION_NAME, GET_DESCRIPTION_FOR_PLACE } from 'react-native-dotenv';
 
 export default class App extends Component<{}> {
     watchId = null;
@@ -113,7 +113,7 @@ export default class App extends Component<{}> {
                     });
                 } else {
                     RNFS.downloadFile({
-                        fromUrl: 'http://romaniantts.com/scripts/mp3/812a27a3_1383_1588601825.mp3',
+                        fromUrl: 'http://romaniantts.com/scripts/mp3/812a27a3_7928_1588851492.mp3',
                         toFile: `${RNFS.DocumentDirectoryPath}/intro.mp3`,
                     }).promise.then((response) => {
                         console.log(response);
@@ -140,26 +140,30 @@ export default class App extends Component<{}> {
             this.watchId = Geolocation.watchPosition(
                 position => {
                     this.setState({ location: position });
-                    console.log(position);
                     const textInput = 'Acesta este un test al doilea';
 
-                    fetch('https://reactnative.dev/movies.json')
+                    fetch(`${GET_LOCATION_NAME}?lat=${position.coords.latitude}&long=${position.coords.longitude}`)
                         .then(response => response.json())
                         .then(json => {
-                            if (json.title) {
-                                fetch('http://romaniantts.com/scripts/api-rotts16.php', {
-                                    body: `voice=sam16&inputText=${encodeURI(textInput)}&vocoder=world&key=${RETEROM_KEY}`,
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-type': 'application/x-www-form-urlencoded',
-                                    },
-                                })
-                                    .then(res => res.text())
-                                    .then(tts => {
-                                        console.log(tts);
-                                        this.setState({ textApi: tts });
+                            if (json) {
+                                console.log(json)
+                                fetch(`${GET_DESCRIPTION_FOR_PLACE}?for_search=${json.data}`)
+                                    .then(desc => {
+                                        fetch(`${RETEROM_API_URL}`, {
+                                            body: `voice=sam16&inputText=${encodeURI(textInput)}&vocoder=world&key=${RETEROM_KEY}`,
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-type': 'application/x-www-form-urlencoded',
+                                            },
+                                        })
+                                            .then(res => res.text())
+                                            .then(tts => {
+                                                console.log(tts);
+                                                this.setState({ textApi: tts });
+                                            })
+                                            .catch(err => console.log(err));
                                     })
-                                    .catch(err => console.log(err));
+                                    .catch(err_desc => console.log(err_desc));
                             }
                         })
                         .catch(error => console.error(error));
@@ -189,7 +193,7 @@ export default class App extends Component<{}> {
                 },
                 {
                     enableHighAccuracy: true,
-                    distanceFilter: 50,
+                    distanceFilter: 0,
                     interval: 5000,
                     fastestInterval: 2000,
                 },
