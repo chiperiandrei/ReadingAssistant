@@ -27,6 +27,8 @@ export default class App extends Component<{}> {
         sound: null,
         playable: false,
         textApi: null,
+        place: '',
+        city: '',
     };
     play = () => {
         this.state.sound.play(() => {
@@ -101,27 +103,33 @@ export default class App extends Component<{}> {
         });
     };
     componentDidMount() {
-        RNFS.exists(`${RNFS.DocumentDirectoryPath}/intro.mp3`)
-            .then((exists) => {
-                if (exists) {
-                    const introsound = new Sound(`${RNFS.DocumentDirectoryPath}/intro.mp3`, Sound.MAIN_BUNDLE, (error) => {
-                        if (error) {
-                            console.log('failed to load the sound', error);
-                        } else {
-                            introsound.play();
-                        }
-                    });
-                } else {
-                    RNFS.downloadFile({
-                        fromUrl: 'http://romaniantts.com/scripts/mp3/812a27a3_7928_1588851492.mp3',
-                        toFile: `${RNFS.DocumentDirectoryPath}/intro.mp3`,
-                    }).promise.then((response) => {
-                        console.log(response);
-                    })
-                        .catch(err => console.log(err));
 
-                }
-            });
+
+        // RNFS.exists(`${RNFS.DocumentDirectoryPath}/temp.mp3`)
+        //     .then((exists) => {
+        //         if (exists) {
+        //             const soundObj = new Sound(
+        //                 `${RNFS.DocumentDirectoryPath}/temp.mp3`, '',
+        //                 error => {
+        //                     if (error) {
+        //                         Alert.alert('error', error.message);
+        //                     }
+        //                 },
+        //             );
+        //             this.setState({ sound: soundObj }, () => {
+        //                 this.setState({ playable: true });
+        //             });
+        //         } else {
+        //             console.log("BLAH DOES NOT EXIST");
+        //         }
+        //     });
+        const introsound = new Sound('intro.mp3', Sound.MAIN_BUNDLE, (error) => {
+            if (error) {
+                console.log('failed to load the sound', error);
+            } else {
+                introsound.play();
+            }
+        });
     }
 
 
@@ -140,17 +148,37 @@ export default class App extends Component<{}> {
             this.watchId = Geolocation.watchPosition(
                 position => {
                     this.setState({ location: position });
-                    const textInput = 'Acesta este un test al doilea';
 
-                    fetch(`${GET_LOCATION_NAME}?lat=${position.coords.latitude}&long=${position.coords.longitude}`)
-                        .then(response => response.json())
-                        .then(json => {
-                            if (json) {
-                                console.log(json)
-                                fetch(`${GET_DESCRIPTION_FOR_PLACE}?for_search=${json.data}`)
-                                    .then(desc => {
+                    fetch(`http://12cbd270.ngrok.io/getLocations?lat=${position.coords.latitude}&long=${position.coords.longitude}`)
+                        .then(response => response.text())
+                        .then(res => {
+                            if (res !== "") {
+                                console.log(res)
+                                this.setState({ place: res })
+                                const getCity = () => {
+                                    fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=AIzaSyDQDFqXEtbFwpeFkiBMcyhVUknEWzvW9x0`)
+                                        .then(response => response.json())
+                                        .then(json => this.setState({ city: json.results[0].address_components[2].long_name }))
+                                        .catch(err => console.log('aocio'))
+                                }
+                                const city = getCity()
+                                console.log(city)
+                                var y = res.split(' ').slice(0, 2).join(' ') + this.state.city;
+                                console.log(y)
+
+
+                                fetch(`http://12cbd270.ngrok.io/wikipediaAPI?for_search=${y}`, {
+                                    method: 'GET',
+                                })
+                                    .then(desc => desc.json())
+                                    .then(json => {
+                                        let textInput = json.query.pages[Object.keys(json.query.pages)[0]].extract;
+                                        if (textInput === undefined || textInput === 'undefined')
+                                            textInput = 'Nu am putut găsi informații relevante despre această locație'
+                                        const filtrat = textInput.replace(/[\])}[{(]/g, '')
+                                        console.log(filtrat)
                                         fetch(`${RETEROM_API_URL}`, {
-                                            body: `voice=sam16&inputText=${encodeURI(textInput)}&vocoder=world&key=${RETEROM_KEY}`,
+                                            body: `voice=sam16&inputText=${encodeURI(filtrat)}&vocoder=world&key=${RETEROM_KEY}`,
                                             method: 'POST',
                                             headers: {
                                                 'Content-type': 'application/x-www-form-urlencoded',
@@ -160,32 +188,62 @@ export default class App extends Component<{}> {
                                             .then(tts => {
                                                 console.log(tts);
                                                 this.setState({ textApi: tts });
+                                                const introsound = new Sound(tts, Sound.MAIN_BUNDLE, (error) => {
+                                                    if (error) {
+                                                        console.log('failed to load the sound', error);
+                                                    } else {
+                                                        introsound.play();
+                                                    }
+                                                });
                                             })
-                                            .catch(err => console.log(err));
+                                            .catch(err => console.log("aiuci la reterom"));
+
                                     })
-                                    .catch(err_desc => console.log(err_desc));
+                                    .catch(err_desc => console.log("aici la wikipeida"));
+
+                                // RNFS.unlink(`${RNFS.DocumentDirectoryPath}/temp.mp3`)
+                                //     .then(() => {
+                                //         console.log('FILE DELETED');
+                                //     })
+                                //     // `unlink` will throw an error, if the item to unlink does not exist
+                                //     .catch((err) => {
+                                //         console.log(err.message);
+                                //     });
+                                // RNFS.downloadFile({
+                                //     fromUrl: `${this.state.textApi}`,
+                                //     toFile: `${RNFS.DocumentDirectoryPath}/temp.mp3`,
+                                // }).promise.then((response) => {
+                                //     console.log(response);
+                                // })
+                                //     .catch(err => console.log("aici la file"));
+
+
+                            }
+                            else {
+                                fetch(`${RETEROM_API_URL}`, {
+                                    body: `voice=sam16&inputText=${encodeURI('Nu am găsit nicio locație în baza de date.')}&vocoder=world&key=${RETEROM_KEY}`,
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-type': 'application/x-www-form-urlencoded',
+                                    },
+                                })
+                                    .then(res => res.text())
+                                    .then(tts => {
+                                        const introsound = new Sound(tts, Sound.MAIN_BUNDLE, (error) => {
+                                            if (error) {
+                                                console.log('failed to load the sound', error);
+                                            } else {
+                                                introsound.play();
+                                            }
+                                        });
+                                    })
+                                    .catch(err => console.log("aiuci la reterom"));
                             }
                         })
-                        .catch(error => console.error(error));
-                    RNFS.downloadFile({
-                        fromUrl: `${this.state.textApi}`,
-                        toFile: `${RNFS.DocumentDirectoryPath}/temp.mp3`,
-                    }).promise.then((response) => {
-                        console.log(response);
-                    })
-                        .catch(err => console.log(err));
+                        .catch(err_desc => console.log('nu am putut gasi informatii relevante'))
 
-                    const soundObj = new Sound(
-                        `${RNFS.DocumentDirectoryPath}/temp.mp3`, '',
-                        error => {
-                            if (error) {
-                                Alert.alert('error', error.message);
-                            }
-                        },
-                    );
-                    this.setState({ sound: soundObj }, () => {
-                        this.setState({ playable: true });
-                    });
+
+
                 },
                 error => {
                     this.setState({ location: error });
@@ -193,7 +251,7 @@ export default class App extends Component<{}> {
                 },
                 {
                     enableHighAccuracy: true,
-                    distanceFilter: 0,
+                    distanceFilter: 100,
                     interval: 5000,
                     fastestInterval: 2000,
                 },
@@ -261,6 +319,7 @@ export default class App extends Component<{}> {
                     </View>
 
                     <View style={styles.result}>
+                        {this.state.place !== '' ? <Text>Te afli {this.state.place}</Text> : null}
                         <Text>{JSON.stringify(location, null, 4)}</Text>
                         <Text>{this.state.textApi}</Text>
                     </View>
