@@ -30,6 +30,5 @@ def getWikiAPIRoute():
 # http://[id].ngrok.io/getLocations?lat=47.157466&long=27.578429
 # http://[id].ngrok.io/wikipediaAPI?for_search=palatul
 
-
 if __name__ == "__main__":
     app.run()

@@ -6,12 +6,10 @@ import math
 
 
 def startParsing():
-    finalText = "Astazi am vizitat Palatul Culturii, localizat aproape de Palas Mall, in Iasi." \
-                "Apoi am fost la Iulius Mall, in Tudor." \
-                "Dar cel mai mult mi-a placut plimbarea din Parcul Copou."
+    file = open('C:/Users/Ioana/Desktop/ReadingAssistant/backend/myText.txt', 'r', encoding='utf-8')
 
     places_from_text = []
-    more_places = geograpy3.get_place_context(text=finalText)
+    more_places = geograpy3.get_place_context(text=file.read())
     if len(more_places.cities) > 0:
         places_from_text.append(more_places.cities)
 
