@@ -30,7 +30,7 @@ def get_description(place):
                 }
                 if "ro." in item["link"]:
                     results.append(item)
-        urele = "https://ro.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&titles={}".format(
+        urele = "https://ro.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exsentences=2&exintro&explaintext&titles={}".format(
             results[0]["title"][:-11])
         r = requests.get(url=urele)
         return r.json()
