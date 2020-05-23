@@ -77,10 +77,12 @@ import com.android.build.OutputFile
 
 project.ext.react = [
     entryFile: "index.js",
-    enableHermes: false,  // clean and rebuild if changing
+    enableHermes: false
 ]
 
+apply from: '../../node_modules/react-native-unimodules/gradle.groovy'
 apply from: "../../node_modules/react-native/react.gradle"
+apply from: "../../node_modules/expo-updates/scripts/create-manifest-android.gradle"
 
 /**
  * Set this to true to create two separate APKs instead of one:
@@ -149,12 +151,13 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-        release {
-            storeFile file('tiln_readingassistant.keystore')
-            storePassword 'password123'
-            keyAlias 'tiln_readingassistant'
-            keyPassword 'password123'
+        release{
+            storeFile file('tiln_ra.keystore')
+            storePassword 'tilnapp'
+            keyAlias 'tiln_ra'
+            keyPassword 'tilnapp'
         }
+
     }
     buildTypes {
         debug {
@@ -186,10 +189,10 @@ android {
 }
 
 dependencies {
-    implementation project(':react-native-fs')
-    implementation project(':react-native-vector-icons')
+    implementation project(':react-native-sound')
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.facebook.react:react-native:+"  // From node_modules
+    addUnimodulesDependencies()
 
     if (enableHermes) {
         def hermesPath = "../../node_modules/hermes-engine/android/";

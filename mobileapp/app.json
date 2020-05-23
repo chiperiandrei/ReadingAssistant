@@ -1,4 +1,17 @@
 {
-  "name": "readingassistant",
-  "displayName": "readingassistant"
+  "name": "reading-assistant",
+  "displayName": "reading-assistant",
+  "expo": {
+    "name": "reading-assistant",
+    "slug": "expo-template-bare",
+    "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
 }
