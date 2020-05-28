@@ -1,12 +1,12 @@
-import xml.etree.ElementTree as ET
 import geograpy3
-from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 import math
 
+from getCordonate import get_cordonate
+
 
 def startParsing():
-    file = open('C:/Users/Ioana/Desktop/ReadingAssistant/backend/myText.txt', 'r', encoding='utf-8')
+    file = open('C:/Users/Ioana/Desktop/ReadingAssistant/backend/input_1.txt', 'r', encoding='utf-8')
 
     places_from_text = []
     more_places = geograpy3.get_place_context(text=file.read())
@@ -19,17 +19,16 @@ def startParsing():
     if len(more_places.places) > 0:
         places_from_text.append(more_places.places)
 
-    # aici calculez lat si long pentru fiecare place din places_from_text
-    geolocator = Nominatim()
     lat_lon = []
     for places in places_from_text:
         for place in places:
             try:
-                location = geolocator.geocode(place)
-                if location:
-                    lat_lon.append(location)
+                location = get_cordonate(place)
+                if location is not None:
+                    lat_lon.append((place, location))
             except GeocoderTimedOut as e:
                 print('No place')
+    print(lat_lon)
     return lat_lon
 
 
