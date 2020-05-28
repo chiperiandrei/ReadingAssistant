@@ -6,6 +6,7 @@ import {
   Text,
   ToastAndroid,
   View,
+  Image
 } from 'react-native';
 import { Header, Button, Avatar } from 'react-native-elements';
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -13,6 +14,7 @@ import Geolocation from 'react-native-geolocation-service';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Sound from 'react-native-sound';
 import { RETEROM_KEY, RETEROM_API_URL, GET_LOCATION_NAME, GET_DESCRIPTION_FOR_PLACE } from 'react-native-dotenv';
+import MapView,{ PROVIDER_GOOGLE,Marker } from 'react-native-maps';
 
 export default class App extends Component<{}> {
   watchId = null;
@@ -83,7 +85,6 @@ export default class App extends Component<{}> {
       Geolocation.getCurrentPosition(
         position => {
           this.setState({ location: position, loading: false });
-          console.log(position);
         },
         error => {
           this.setState({ location: error, loading: false });
@@ -174,10 +175,28 @@ export default class App extends Component<{}> {
                           }
                         });
                       })
-                      .catch(err => console.log("aiuci la reterom"));
+                      .catch(err => {
+                        const sunet_error_reterom = new Sound('reterom_eroare.mp3', Sound.MAIN_BUNDLE, (error) => {
+                          if (error) {
+                            console.log(error)
+                          }
+                          else {
+                            sunet_error_reterom.play();
+                          }
+                        })
+                      });
 
                   })
-                  .catch(err_desc => console.log("aici la wikipeida"));
+                  .catch(err_desc => {
+                    const sunet_error_wikipedia = new Sound('wikipedia_get_error.mp3', Sound.MAIN_BUNDLE, (error) => {
+                      if (error) {
+                        console.log(error)
+                      }
+                      else {
+                        sunet_error_wikipedia.play();
+                      }
+                    })
+                  }); //@TODO: sunet pentru eroare wikipedia
 
 
 
@@ -203,7 +222,16 @@ export default class App extends Component<{}> {
                   .catch(err => console.log("aiuci la reterom"));
               }
             })
-            .catch(err_desc => console.log('nu am putut gasi informatii relevante'))
+            .catch(err_desc => {
+              const sunet_error_locatie_din_text = new Sound('get_locations_error.mp3', Sound.MAIN_BUNDLE, (error) => {
+                if (error) {
+                  console.log(error)
+                }
+                else {
+                  sunet_error_locatie_din_text.play();
+                }
+              })
+            }) //@TODO sunet pentru eroare getLocatie
 
 
 
@@ -281,11 +309,31 @@ export default class App extends Component<{}> {
             />
           </View>
 
-          <View style={styles.result}>
-            {this.state.place !== '' ? <Text>Te afli {this.state.place}</Text> : null}
-            <Text>{JSON.stringify(location, null, 4)}</Text>
-            <Text>{this.state.textApi}</Text>
-          </View>
+          {this.state.place !== '' ? <Text>Te afli {this.state.place}</Text> : null}
+          {this.state.location !== {} && this.state.location.coords ? console.log(this.state.location.coords.latitude) : null}
+
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            region={{
+              latitude: this.state.location !== {} && this.state.location.coords ? this.state.location.coords.latitude : 27.222,
+              longitude: this.state.location !== {} && this.state.location.coords ? this.state.location.coords.longitude : -122.22,
+              latitudeDelta: 0.09,
+              longitudeDelta: 0.035
+            }}
+            style={styles.map}>
+            <Marker
+              coordinate={{
+                latitude:this.state.location !== {} && this.state.location.coords ? this.state.location.coords.latitude : 27.222,
+                longitude:this.state.location !== {} && this.state.location.coords ? this.state.location.coords.longitude : -122.22,
+              }}
+              title={'Salut'}
+              description={'descriere'}
+              
+            >
+              <Image source={require('./ceva.gif')} style={styles.marker}/>
+            </Marker>
+
+          </MapView>
         </View>
       </>
     );
@@ -345,4 +393,12 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: 'cover',
   },
+  map: {
+    height: '60%',
+    width: '100%'
+  },
+  marker:{
+    height:20,
+    width:40
+  }
 });
