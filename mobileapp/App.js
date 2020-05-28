@@ -119,6 +119,8 @@ export default class App extends Component<{}> {
       .join('&');
   }
   getLocationUpdates = async () => {
+    console.log(GET_DESCRIPTION_FOR_PLACE)
+    console.log(GET_LOCATION_NAME)
     const hasLocationPermission = await this.hasLocationPermission();
 
     if (!hasLocationPermission) { return; }
@@ -126,9 +128,10 @@ export default class App extends Component<{}> {
     this.setState({ updatesEnabled: true }, () => {
       this.watchId = Geolocation.watchPosition(
         position => {
+          console.log(position)
           this.setState({ location: position });
 
-          fetch(`http://12cbd270.ngrok.io/getLocations?lat=${position.coords.latitude}&long=${position.coords.longitude}`)
+          fetch(`${GET_LOCATION_NAME}?lat=${position.coords.latitude}&long=${position.coords.longitude}`)
             .then(response => response.text())
             .then(res => {
               if (res !== "") {
@@ -146,7 +149,7 @@ export default class App extends Component<{}> {
                 console.log(y)
 
 
-                fetch(`http://12cbd270.ngrok.io/wikipediaAPI?for_search=${y}`, {
+                fetch(`${GET_DESCRIPTION_FOR_PLACE}?for_search=${y}`, {
                   method: 'GET',
                 })
                   .then(desc => desc.json())
@@ -315,16 +318,16 @@ export default class App extends Component<{}> {
           <MapView
             provider={PROVIDER_GOOGLE}
             region={{
-              latitude: this.state.location !== {} && this.state.location.coords ? this.state.location.coords.latitude : 27.222,
-              longitude: this.state.location !== {} && this.state.location.coords ? this.state.location.coords.longitude : -122.22,
-              latitudeDelta: 0.09,
-              longitudeDelta: 0.035
+              latitude: this.state.location !== {} && this.state.location.coords ? this.state.location.coords.latitude : 47.1739724,
+              longitude: this.state.location !== {} && this.state.location.coords ? this.state.location.coords.longitude : 27.5749111,
+              latitudeDelta: 0.001,
+              longitudeDelta: 0.001
             }}
             style={styles.map}>
             <Marker
               coordinate={{
-                latitude:this.state.location !== {} && this.state.location.coords ? this.state.location.coords.latitude : 27.222,
-                longitude:this.state.location !== {} && this.state.location.coords ? this.state.location.coords.longitude : -122.22,
+                latitude:this.state.location !== {} && this.state.location.coords ? this.state.location.coords.latitude : 47.1739724,
+                longitude:this.state.location !== {} && this.state.location.coords ? this.state.location.coords.longitude : 27.5749111,
               }}
               title={'Salut'}
               description={'descriere'}
