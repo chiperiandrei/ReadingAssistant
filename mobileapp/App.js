@@ -135,7 +135,6 @@ export default class App extends Component<{}> {
             .then(response => response.text())
             .then(res => {
               if (res !== "") {
-                console.log(res)
                 this.setState({ place: res })
                 const getCity = () => {
                   fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=AIzaSyDQDFqXEtbFwpeFkiBMcyhVUknEWzvW9x0`)
@@ -143,13 +142,13 @@ export default class App extends Component<{}> {
                     .then(json => this.setState({ city: json.results[0].address_components[2].long_name }))
                     .catch(err => console.log('aocio'))
                 }
-                const city = getCity()
-                console.log(city)
-                var y = res.split(' ').slice(0, 2).join(' ') + this.state.city;
-                console.log(y)
+                // const city = getCity()
+                // console.log(city)
+                // var y = res.split(' ').slice(0, 2).join(' ') + this.state.city;
+                // console.log(y)
 
 
-                fetch(`${GET_DESCRIPTION_FOR_PLACE}?for_search=${y}`, {
+                fetch(`${GET_DESCRIPTION_FOR_PLACE}?for_search=${res}`, {
                   method: 'GET',
                 })
                   .then(desc => desc.json())
@@ -158,7 +157,7 @@ export default class App extends Component<{}> {
                     if (textInput === undefined || textInput === 'undefined')
                       textInput = 'Nu am putut găsi informații relevante despre această locație'
                     const filtrat = textInput.replace(/[\])}[{(]/g, '')
-                    console.log(filtrat)
+                    console.warn(filtrat)
                     fetch(`${RETEROM_API_URL}`, {
                       body: `voice=sam16&inputText=${encodeURI(filtrat)}&vocoder=world&key=${RETEROM_KEY}`,
                       method: 'POST',
