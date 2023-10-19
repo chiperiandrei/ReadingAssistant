@@ -1,7 +1,7 @@
 # Reading-Assistant-NLP-Project
 
-Aveți o colecție de texte care abundă în entități geografice, marcate XML explicit, textele fiind însoțite de metadate care descriu: autorul și titlul cărții, anul de apariție și editura. Aplicația va semnala proximitatea telefonului față de locațiile menționate în texte și vă va citi acele fragmente care includ mențiunilor respective. În felul acesta, o plimbare printr-un mare oraș se poate transforma într-o călătorie literară.  
+You have a collection of texts that is rich in geographical entities, explicitly marked XML, and the texts are accompanied by metadata describing: the author and title of the book, the year of publication and the publisher. The app will signal your phone's proximity to the locations mentioned in the texts and read you those snippets that include those mentions. In this way, a walk through a big city can turn into a literary journey.
 
-Echipa:
+Team:
 - Chiperi Andrei
 - Stoica Ioana
